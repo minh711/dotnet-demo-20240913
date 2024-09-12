@@ -1,5 +1,6 @@
 using Demo13092024.Db;
 using Demo13092024.Service;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,8 +10,13 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddTransient<IPlayerService, PlayerService >();
-builder.Services.AddDatabaseService(Configuration.GetConnectionString("CodeFirstDemoDb"));
+builder.Services.AddTransient<IPlayerService, PlayerService>();
+
+builder.Services.AddDbContext<CodeFirstDemoContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("CodeFirstDemoDb"));
+});
+
 builder.Services.AddControllers();
 
 var app = builder.Build();
