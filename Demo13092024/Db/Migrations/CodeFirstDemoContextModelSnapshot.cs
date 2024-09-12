@@ -32,7 +32,8 @@ namespace Demo13092024.Db.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
 
@@ -79,7 +80,8 @@ namespace Demo13092024.Db.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
                     b.HasKey("Id");
 
@@ -99,11 +101,13 @@ namespace Demo13092024.Db.Migrations
 
                     b.Property<string>("Level")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("ModelName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<int>("PlayerId")
                         .HasColumnType("int");
@@ -125,13 +129,15 @@ namespace Demo13092024.Db.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Demo13092024.Db.Models.Player", null)
+                    b.HasOne("Demo13092024.Db.Models.Player", "Player")
                         .WithMany("Instruments")
                         .HasForeignKey("PlayerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("InstrumentType");
+
+                    b.Navigation("Player");
                 });
 
             modelBuilder.Entity("Demo13092024.Db.Models.Player", b =>

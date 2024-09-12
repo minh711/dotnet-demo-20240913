@@ -7,6 +7,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Demo13092024.Db;
 using Demo13092024.Db.Models;
+using Demo13092024.Service;
+using Demo13092024.DTOs.Players;
+using Demo13092024.DTOs;
 
 namespace Demo13092024.Controllers
 {
@@ -14,95 +17,50 @@ namespace Demo13092024.Controllers
     [ApiController]
     public class PlayersController : ControllerBase
     {
-        private readonly CodeFirstDemoContext _context;
+        private readonly IPlayerService _playerService;
 
-        public PlayersController(CodeFirstDemoContext context)
+        public PlayersController(IPlayerService playerService)
         {
-            _context = context;
+            _playerService = playerService;
         }
 
-        // GET: api/Players
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Player>>> GetPlayers()
+        public async Task<IActionResult> GetPlayersAsync([FromQuery] UrlQueryParameters urlQueryParameters)
         {
-            return await _context.Players.ToListAsync();
+            var result = await _playerService.GetPlayerAsync(urlQueryParameters);
+            if (result == null) return NotFound();
+            return Ok(result);
         }
 
-        // GET: api/Players/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Player>> GetPlayer(int id)
+        [HttpGet("{id:int}/detail")]
+        public async Task<IActionResult> GetPlayerDetailAsync(int id)
         {
-            var player = await _context.Players.FindAsync(id);
-
-            if (player == null)
-            {
-                return NotFound();
-            }
-
-            return player;
+            var result = await _playerService.GetPlayerDetailAsync(id);
+            if (result == null) return NotFound();
+            return Ok(result);
         }
 
-        // PUT: api/Players/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutPlayer(int id, Player player)
-        {
-            if (id != player.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(player).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!PlayerExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
-        // POST: api/Players
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Player>> PostPlayer(Player player)
+        public async Task<IActionResult> PostPlayerAsync([FromBody] CreatePlayerRequest playerRequest)
         {
-            _context.Players.Add(player);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetPlayer", new { id = player.Id }, player);
+            await _playerService.CreatePlayerAsync(playerRequest);
+            return Ok(new { message = "Player created successfully" });
         }
 
-        // DELETE: api/Players/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeletePlayer(int id)
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> PutPlayerAsync(int id, [FromBody] UpdatePlayerRequest playerRequest)
         {
-            var player = await _context.Players.FindAsync(id);
-            if (player == null)
-            {
-                return NotFound();
-            }
-
-            _context.Players.Remove(player);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            var result = await _playerService.UpdatePlayerAsync(id, playerRequest);
+            if (!result) return NotFound();
+            return Ok(new { message = "Renamed successfully" });
         }
 
-        private bool PlayerExists(int id)
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> DeletePlayerAsync(int id)
         {
-            return _context.Players.Any(e => e.Id == id);
+            var result = await _playerService.DeletePlayerAsync(id);
+            if (!result) return NotFound();
+            return Ok(new { message = "Deleted successfully" });
         }
     }
 }

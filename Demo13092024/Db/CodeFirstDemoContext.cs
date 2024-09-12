@@ -14,9 +14,6 @@ namespace Demo13092024.Db
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Player>()
-                .HasMany(p => p.Instruments)
-                .WithOne();
             modelBuilder.Seed();
         }
     }
