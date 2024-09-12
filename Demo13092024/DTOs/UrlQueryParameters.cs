@@ -2,5 +2,6 @@
 {
     public class UrlQueryParameters
     {
+        public int Id { get; set; }
     }
 }

@@ -1,11 +1,11 @@
-﻿
-using Demo13092024.Db;
+﻿using Demo13092024.Db;
 using Demo13092024.Db.Models;
 using Demo13092024.DTOs;
+using Demo13092024.DTOs.PlayerInstrument;
 using Demo13092024.DTOs.Players;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
-using System.Numerics;
+using System.Threading.Tasks;
 
 namespace Demo13092024.Service
 {
@@ -20,62 +20,76 @@ namespace Demo13092024.Service
 
         public async Task CreatePlayerAsync(CreatePlayerRequest playerRequest)
         {
-            await _dbContext.Players.AddAsync(playerRequest);
+            var player = new Player
+            {
+                Name = playerRequest.Nickname,
+                JoinedDate = DateTime.Now,
+                Instruments = playerRequest.PlayerInstruments.Select(i => new PlayerInstrument
+                {
+                    InstrumentTypeId = i.InstrumentTypeId,
+                    ModelName = i.ModelName,
+                    Level = i.Level
+                }).ToList()
+            };
+
+            _dbContext.Players.Add(player);
             await _dbContext.SaveChangesAsync();
         }
 
         public async Task<bool> DeletePlayerAsync(int id)
         {
             var player = await _dbContext.Players.FindAsync(id);
-            if (player == null)
-                return false;
+            if (player == null) return false;
+
             _dbContext.Players.Remove(player);
             await _dbContext.SaveChangesAsync();
             return true;
         }
 
-        public async Task<GetPlayerResponse> GetPlayerAsync()
+        public async Task<GetPlayerResponse> GetPlayerAsync(UrlQueryParameters urlQueryParameters)
         {
-            var players = _dbContext.Players.AsQueryable();
-            var total = await players.CountAsync();
-            var pagedPlayers = await players
-                .ToListAsync();
-
-            return new GetPlayerResponse
-            {
-                Total = total,
-                Data = pagedPlayers.Select(p => new GetPlayerResponse
+            var player = await _dbContext.Players
+                .Select(p => new GetPlayerResponse
                 {
-                    Id = p.Id,
-                    Name = p.Name,
-                    Age = p.Age,
-                    Instrument = p.Instrument,
-                }).ToList(),
-            };
+                    PlayerId = p.Id,
+                    NickName = p.Name,
+                    JoinedDate = p.JoinedDate,
+                    InstrumentSubmittedCount = p.Instruments.Count
+                })
+                .FirstOrDefaultAsync(p => p.PlayerId == urlQueryParameters.Id);
+
+            return player;
         }
 
         public async Task<GetPlayerDetailResponse> GetPlayerDetailAsync(int id)
         {
-            var player = await _dbContext.Players.FindAsync(id);
-            if (player == null)
-                return null;
+            var player = await _dbContext.Players
+                .Include(p => p.Instruments)
+                .ThenInclude(pi => pi.InstrumentType)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (player == null) return null;
+
             return new GetPlayerDetailResponse
             {
-                Id = player.Id,
-                Name = player.Name,
-                Age = player.,
-                Instrument = player.Instrument,
+                NickName = player.Name,
+                JoinedDate = player.JoinedDate,
+                PlayerInstruments = player.Instruments.Select(i => new GetPlayerInstrumentResponse
+                {
+                    InstrumentTypeId = i.InstrumentTypeId,
+                    ModelName = i.ModelName,
+                    Level = i.Level
+                }).ToList()
             };
         }
 
         public async Task<bool> UpdatePlayerAsync(int id, UpdatePlayerRequest playerRequest)
         {
             var player = await _dbContext.Players.FindAsync(id);
-            if (player == null)
-                return false;
-            player.Name = playerRequest.Name;
-            player.JoinedDate = playerRequest.JoinDate;
-            player.Instruments = playerRequest.Instruments;
+            if (player == null) return false;
+
+            player.Name = playerRequest.NickName;
+            _dbContext.Players.Update(player);
             await _dbContext.SaveChangesAsync();
             return true;
         }
