@@ -1,4 +1,5 @@
-﻿using Demo13092024.Db;
+﻿using AutoMapper;
+using Demo13092024.Db;
 using Demo13092024.Db.Models;
 using Demo13092024.DTOs;
 using Demo13092024.DTOs.PlayerInstrument;
@@ -12,25 +13,29 @@ namespace Demo13092024.Service
     public class PlayerService : IPlayerService
     {
         private readonly CodeFirstDemoContext _dbContext;
+        private readonly IMapper _mapper;
 
-        public PlayerService(CodeFirstDemoContext dbContext)
+        public PlayerService(CodeFirstDemoContext dbContext, IMapper mapper)
         {
             _dbContext = dbContext;
+            _mapper = mapper;
         }
 
         public async Task CreatePlayerAsync(CreatePlayerRequest playerRequest)
         {
-            var player = new Player
-            {
-                Name = playerRequest.Nickname,
-                JoinedDate = DateTime.Now,
-                Instruments = playerRequest.PlayerInstruments.Select(i => new PlayerInstrument
-                {
-                    InstrumentTypeId = i.InstrumentTypeId,
-                    ModelName = i.ModelName,
-                    Level = i.Level
-                }).ToList()
-            };
+            //var player = new Player
+            //{
+            //    Name = playerRequest.Nickname,
+            //    JoinedDate = DateTime.Now,
+            //    Instruments = playerRequest.PlayerInstruments.Select(i => new PlayerInstrument
+            //    {
+            //        InstrumentTypeId = i.InstrumentTypeId,
+            //        ModelName = i.ModelName,
+            //        Level = i.Level
+            //    }).ToList()
+            //};
+
+            var player = _mapper.Map<Player>(playerRequest);
 
             _dbContext.Players.Add(player);
             await _dbContext.SaveChangesAsync();
